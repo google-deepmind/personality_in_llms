@@ -1,6 +1,13 @@
-"""Administers PsyBORGS tests to HuggingFace models via Outlines and vLLM.
+"""Administers PsyBORGS tests to HuggingFace models via Outlines.
 
-Use `python run_hf_inference.py -h` for detailed usage information.
+This script carries out constrained batch inference using Outlines. Basic local
+inference is supported by default. If memory permits, it is more efficient run
+batched inference, using the `--bulk` flag.
+
+We recommend running accelerated / distributed inference for larger models using
+vLLM (`--vllm`). This option requires at least one CUDA-capable GPU.
+
+Run `python run_hf_inference.py -h` for detailed usage information.
 
 Example usage:
     python inference_scripts/run_hf_inference.py \
@@ -312,6 +319,10 @@ def parse_args():
         help=('if True, only sample 1,000 rows of the `admin_session` used '
               '(for testing)'))
     parser.add_argument(
+        '--bulk', action='store_true',
+        help=('if True, run using Outlines\' default implementation of batched'
+             'inference (not using vLLM)'))
+    parser.add_argument(
         '--vllm', action='store_true',
         help=('run model on vLLM (requires at least one GPU with a CUDA '
               'compute capability of 7.0 or higher)'))
@@ -394,11 +405,12 @@ def main():
     # print temperature
     print(f"Sampling temperature: {args.temperature}")
 
-    # run serial inference
+    # run inference
     results = administer_session_via_outlines(
         gen_payload,
         model=model,
         temperature=args.temperature,
+        bulk=args.bulk,
         use_vllm=args.vllm)
 
     # create a results directory if it doesn't already exist
