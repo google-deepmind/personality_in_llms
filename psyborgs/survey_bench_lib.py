@@ -62,7 +62,6 @@ class ResponseScale:
 
 class ModelFamily(str, enum.Enum):
   PALM = 'PaLM'
-  LLAMA = 'LLaMA'
   LLAMA2 = 'LLaMA-2'
   MISTRAL = 'Mistral'
   MIXTRAL = 'Mixtral'
@@ -295,8 +294,6 @@ def assemble_and_score_payload(
   # generate payload_specification
   payload_spec = generate_payload_spec(measure, prompt, continuation, score,
                                        model_id)
-
-  # TODO(ccrepy, dariav): logging can go here
 
   if verbose:
     # view payload and specification if verbose
