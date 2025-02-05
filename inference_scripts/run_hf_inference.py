@@ -181,6 +181,7 @@ def process_payload_group_vllm(prompts: Sequence[str],
         A sequence of model outputs (strings).
     """
     # load vLLM-specific logits processor
+    # pylint: disable-next=import-outside-toplevel
     from outlines.serve.vllm import RegexLogitsProcessor
 
     # convert continuations to Outlines-friendly regex
@@ -191,6 +192,7 @@ def process_payload_group_vllm(prompts: Sequence[str],
                                             llm=model.llm_engine)
 
     # set vLLM sampling parameters
+    # pylint: disable-next=undefined-variable
     vllm_sampling_params = vllm.SamplingParams(
         # this seed encourages reproducibility across requests
         seed=42,
@@ -388,8 +390,10 @@ def main():
     if args.vllm:
         # import vLLM outside toplevel only if used. otherwise, this script will
         # not work on machines without vLLM-supported GPUs
+        # pylint: disable-next=import-outside-toplevel
         import vllm
-        global vllm
+        # pylint: disable-next=global-statement
+        global vllm # type: ignore
 
         model = vllm.LLM(
             model=args.model_pointer,
