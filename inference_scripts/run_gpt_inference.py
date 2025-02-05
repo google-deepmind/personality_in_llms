@@ -150,8 +150,7 @@ def process_payload_group(prompts: Sequence[str],
                 try:
                     model_answers[idx] = future.result()
                 except Exception as exc:
-                    print(f"GPT Inference Script Error: {exc}")
-                    print(f"GPT Inference Script Error for prompt '{prompts[idx]}': {exc}")
+                    print(f"GPT inference script error for prompt '{prompts[idx]}': {exc}")
 
     elif not bulk:
         # create generator
@@ -212,7 +211,7 @@ def administer_session_via_outlines(payload_df: pd.DataFrame,
         # print grouped_df memory
         # print("grouped_df memory: ")
         # print(pd.io.formats.info.DataFrameInfo(grouped_df).memory_usage_string.strip())
-        
+
         # cache the first set of continuations for reuse
         continuations = grouped_df['continuation_text'].iloc[0]
         print("Working on continuations [" + ', ' \
@@ -292,7 +291,7 @@ def main():
         MODEL_ID = str(args.model_pointer).split('/')[1]
     else:
         MODEL_ID = args.model_pointer
-    
+
     # load admin_session
     admin_session = survey_bench_lib.load_admin_session(
         args.admin_session)
