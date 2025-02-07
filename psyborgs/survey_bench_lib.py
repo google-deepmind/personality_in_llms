@@ -26,7 +26,7 @@ import dacite
 import pandas as pd
 
 
-from psyborgs import llm_scoring_lib
+# from psyborgs import llm_scoring_lib
 
 SURVEY_DIR = ''
 
@@ -168,12 +168,12 @@ def load_admin_session(json_path: str):
   return admin_session
 
 
-def create_llm_scoring_fn(
-    model_spec):
-  """Creates a LanguageModelScoringFn instance given a model specification."""
-  # this is currently a dummy function to be enhanced with real world models.
-  del model_spec
-  return llm_scoring_lib.score_with_dummy_llm
+# def create_llm_scoring_fn(
+#     model_spec):
+#   """Creates a LanguageModelScoringFn instance given a model specification."""
+#   # this is currently a dummy function to be enhanced with real world models.
+#   del model_spec
+#   return llm_scoring_lib.score_with_dummy_llm
 
 
 def create_llm_scoring_fns_dict(
