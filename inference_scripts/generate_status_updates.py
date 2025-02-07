@@ -2,12 +2,15 @@
 
 This script works for both HuggingFace models on vLLM and OpenAI API models. 
 `asyncio` is used to run bulk inference on OpenAI models, which can be
-rate-limited using `--rpm_limit` (50 RPM will be set by default). 
+rate-limited using `--rpm_limit` (50 RPM will be set by default). `openai` will
+automatically use the `OPENAI_API_KEY` variable in your environment if not
+explicitly provided using the `--api_key` flag.
 
-Use `python generate_status_updates.py -h` for detailed usage information. 
+Use `python -m inference_scripts.generate_status_updates -h` for detailed usage
+information. 
 
 Example vLLM usage:
-    python inference_scripts/generate_status_updates.py \
+    python -m inference_scripts.generate_status_updates \
         --admin_session='admin_sessions/generate_updates_ablation_01_admin_session_100.json' \
         --model_pointer='meta-llama/Llama-2-7b-chat-hf' \
         --n_gpus=2 \
@@ -15,7 +18,7 @@ Example vLLM usage:
         --sample
 
 Example OpenAI usage:
-    python inference_scripts/generate_status_updates.py \
+    python -m inference_scripts.generate_status_updates \
         --admin_session='generate_updates_ablation_01_admin_session_25.json' \
         --model_pointer='gpt-3.5-turbo-0125' \
         --payload='admin_sessions/generate_updates_ablation_01_admin_session_25_payloads/generate_updates_ablation_01_admin_session_25_payload_0.pkl' \
@@ -39,14 +42,11 @@ PATH = "../"
 sys.path.append(PATH)
 
 from psyborgs import survey_bench_lib
-from inference_scripts.run_hf_inference import generate_payload_df
+from .run_hf_inference import generate_payload_df
 
 # from typing import Union, Callable, List
 from typing import Union, List, Optional
 from collections.abc import Callable
-
-# vLLM integration
-import vllm
 
 # OpenAI integration
 from functools import singledispatch
@@ -111,7 +111,8 @@ def generate_status_updates(payload_df: pd.DataFrame,
                             model: Union[Callable, str],
                             temperature: float=1.0,
                             max_tokens: int=1024,
-                            rpm_limit: Optional[int]=None) -> pd.DataFrame:
+                            rpm_limit: Optional[int]=None,
+                            api_key: Optional[str]=None) -> pd.DataFrame:
     """Generate status updates using a given model."""
     # extract prompts
     prompts = list(payload_df['prompt_text'])
@@ -123,7 +124,7 @@ def generate_status_updates(payload_df: pd.DataFrame,
     # run bulk inference
     print(f"Starting bulk inference for {len(prompts)} prompts.")
     model_answers = bulk_inference(
-        model, prompts, temperature, max_tokens, rpm_limit)
+        model, prompts, temperature, max_tokens, rpm_limit, api_key)
 
     # attach model answers to original dataframe
     payload_df['model_output'] = model_answers
@@ -135,7 +136,8 @@ def bulk_inference(model,
                    prompts: List[str],
                    temperature: float=1.0,
                    max_tokens: int=1024,
-                   rpm_limit: Optional[int]=None) -> List[str]:
+                   rpm_limit: Optional[int]=None,
+                   api_key: Optional[str]=None) -> List[str]:
     """Run bulk inference."""
     raise NotImplementedError(f"Unsupported type for model: {type(model)}")
 
@@ -144,10 +146,11 @@ def bulk_inference_vllm(model: Callable,
                         prompts: List[str],
                         temperature: float=1.0,
                         max_tokens: int=1024,
-                        rpm_limit: Optional[int]=None) -> List[str]:
+                        rpm_limit: Optional[int]=None,
+                        api_key: Optional[str]=None) -> List[str]:
     """Run bulk inference for HF Transformers models via vLLM."""
     # set vLLM model sampling parameters
-    sampling_params = vllm.SamplingParams(
+    sampling_params = vllm.SamplingParams(  # pylint: disable=undefined-variable
         temperature=temperature,
         max_tokens=max_tokens)
     outputs = model.generate(prompts, sampling_params=sampling_params)
@@ -167,14 +170,15 @@ def bulk_inference_openai(model: str,
                           prompts: List[str],
                           temperature: float=1.0,
                           max_tokens: int=1024,
-                          rpm_limit: Optional[int]=None) -> List[str]:
+                          rpm_limit: Optional[int]=None,
+                          api_key: Optional[str]=None) -> List[str]:
     """Run bulk inference for OpenAI models via API."""
     from openai import AsyncOpenAI
     import asyncio
     from aiolimiter import AsyncLimiter
     from tqdm.asyncio import tqdm
 
-    client = AsyncOpenAI(max_retries=10)
+    client = AsyncOpenAI(api_key=api_key, max_retries=10)
 
     print("Beginning async OpenAI API inference.")
     @retry_with_exponential_backoff
@@ -204,8 +208,7 @@ def bulk_inference_openai(model: str,
 
     limiter = AsyncLimiter(rpm_limit)
 
-    asyncio.run(_main())
-
+    return asyncio.run(_main())
 
 def parse_args():
     """Registers arguments."""
@@ -240,6 +243,9 @@ def parse_args():
     parser.add_argument(
         '--openai', action='store_true',
         help=('run inference using OpenAI\'s API'))
+    parser.add_argument(
+        '--api_key', type=str,
+        help='OpenAI API key', default=None)
     parser.add_argument(
         '--rpm_limit', type=int, default=None,
         help='requests per minute limit for OpenAI API')
@@ -312,18 +318,27 @@ def main():
     # sample 1000 prompts
     if args.sample:
         print("Sampling only 1,000 prompts.")
-        payload_df = payload_df.sample(1000, random_state=42)
+        payload_df = payload_df.sample(5, random_state=42)
 
     # initialize model to None
     model = None
 
     # input validation guarantees one of the following options:
     if args.vllm:
+        # import vLLM outside toplevel only if used. otherwise, this script will
+        # not work on machines without vLLM-supported GPUs
+        # pylint: disable-next=import-outside-toplevel
+        import vllm
+        # pylint: disable-next=global-statement
+        global vllm # type: ignore
+
+        # initialize vLLM model
         model = vllm.LLM(model=args.model_pointer,
                          seed=42,
                          # set number of GPUs to use in parallel
                          tensor_parallel_size=args.n_gpus)
     elif args.openai:
+        # set OpenAI model
         model = args.model_pointer
 
     # code to run bulk inference
@@ -331,8 +346,8 @@ def main():
         payload_df,
         model=model,
         temperature=args.temperature,
-        # if `rpm_limit` isn't used
-        **({"rpm_limit": args.rpm_limit} if hasattr(args, 'rpm_limit') else {}))
+        rpm_limit=args.rpm_limit,
+        api_key=args.api_key)
 
     if args.csv:
         results.to_csv(f"{args.results_path}/results_{args.job_name}_{MODEL_ID}_{args.job_id}{chunk_n}.csv")
