@@ -24,3 +24,4 @@ share/python-wheels/
 MANIFEST
 .DS_Store
 results/
+.vscode/settings.json
