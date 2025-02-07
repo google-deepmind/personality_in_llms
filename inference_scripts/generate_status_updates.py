@@ -11,7 +11,7 @@ information.
 
 Example vLLM usage:
     python -m inference_scripts.generate_status_updates \
-        --admin_session='admin_sessions/generate_updates_ablation_01_admin_session_100.json' \
+        --admin_session='admin_sessions/generate_updates_ablation_01_admin_session_25.json' \
         --model_pointer='meta-llama/Llama-2-7b-chat-hf' \
         --n_gpus=2 \
         --vllm \
@@ -19,9 +19,8 @@ Example vLLM usage:
 
 Example OpenAI usage:
     python -m inference_scripts.generate_status_updates \
-        --admin_session='generate_updates_ablation_01_admin_session_25.json' \
-        --model_pointer='gpt-3.5-turbo-0125' \
-        --payload='admin_sessions/generate_updates_ablation_01_admin_session_25_payloads/generate_updates_ablation_01_admin_session_25_payload_0.pkl' \
+        --admin_session='admin_sessions/generate_updates_ablation_01_admin_session_25.json' \
+        --model_pointer='gpt-4o-mini-2024-07-18' \
         --openai # \
         # sample only 1,000 rows from payload
         # --sample \
@@ -318,7 +317,7 @@ def main():
     # sample 1000 prompts
     if args.sample:
         print("Sampling only 1,000 prompts.")
-        payload_df = payload_df.sample(5, random_state=42)
+        payload_df = payload_df.sample(1000, random_state=42)
 
     # initialize model to None
     model = None
