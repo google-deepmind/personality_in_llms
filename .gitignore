@@ -25,3 +25,4 @@ MANIFEST
 .DS_Store
 results/
 .vscode/settings.json
+analysis/scored_results/
