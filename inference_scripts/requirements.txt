@@ -1,0 +1,9 @@
+aiolimiter==1.1.0
+dacite==1.8.1
+numpy==1.26.4
+openai==1.17.1
+outlines==0.0.46
+pandas==2.2.1
+tiktoken==0.6.0
+tqdm==4.66.2
+vllm==0.5.0.post1
