@@ -6,4 +6,4 @@ outlines==0.0.46
 pandas==2.2.1
 tiktoken==0.6.0
 tqdm==4.66.2
-vllm==0.5.0.post1
+vllm==0.7.2
