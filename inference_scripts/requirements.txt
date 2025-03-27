@@ -5,5 +5,5 @@ openai==1.17.1
 outlines==0.0.46
 pandas==2.2.1
 tiktoken==0.6.0
-tqdm==4.66.2
+tqdm==4.66.3
 vllm==0.5.0.post1
