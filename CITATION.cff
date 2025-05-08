@@ -1,5 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Safdari
+    given-names: Mustafa
+    orcid: https://orcid.org/0009-0002-1604-8685
+  - family-names: Serapio-García
+    given-names: Greg
+  - family-names: Crepy
+    given-names: Clément
 title: "Personality Traits in Large Language Models - Github Repo"
 version: 1.0.0
 identifiers:
