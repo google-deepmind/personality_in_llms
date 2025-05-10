@@ -1,0 +1,23 @@
+llms:
+  - name: gpt-4
+    provider: openai
+    model: gpt-4
+    api_key_env: OPENAI_API_KEY
+  - name: llama-2
+    provider: huggingface
+    model: meta-llama/Llama-2-7b-chat-hf
+    api_key_env: HF_API_TOKEN
+
+traits:
+  - Conscientiousness
+  - Agreeableness
+  - Neuroticism
+  - Openness
+  - Extraversion
+
+scale:
+  type: likert
+  min: 1
+  max: 5
+
+input_text: "Tell me about yourself and how you approach life's challenges." 
